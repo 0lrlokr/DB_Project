@@ -1,5 +1,7 @@
 package kau;
 
+import javafx.scene.control.ComboBox;
+
 import java.sql.*;
 import java.util.*;
 import java.awt.*;
@@ -17,8 +19,16 @@ public class Company extends JFrame implements ActionListener{
     public Statement state;
     public ResultSet result;
 
-    private JComboBox Category;
-    private JComboBox Dept;
+    private JComboBox<String> Category;
+    private JComboBox<String> Dept;
+    // 이름, 주민번호, 생일, 주소, 연봉(기호는 select되게), 상사 검색
+    private JTextField textField;
+
+
+    private String[] SalaryOption = {">", "<","="};
+    private String[] SexOption = {"전체", "F", "M"};
+    private String[] DepartMentOption = {"D1","D2","D3"};
+
 
     private JCheckBox name = new JCheckBox("Name", true);
     private JCheckBox ssn = new JCheckBox("Ssn", true);
@@ -59,17 +69,32 @@ public class Company extends JFrame implements ActionListener{
 
     public Company(){
         JPanel ComboBoxPanel = new JPanel();
-        String[] category = {"전체","이름", "성별", "주소", "연봉", "상사", "부서별"};
-        String[] dept = {"Reseatch", "Administration", "Headquarters"};
-        Category = new JComboBox(category);
-        Dept = new JComboBox(dept);
 
+        // 첫 번째 JComboBox(검색 전체 범위)
+        String[] category = {"전체","이름", "성별", "주소", "연봉", "상사", "부서별"};
+
+        Category = new JComboBox<>(category);
         ComboBoxPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
         ComboBoxPanel.add(new JLabel("검색 범위"));
         ComboBoxPanel.add(Category);
+
+
+        //두 번째 JComboBox(선택지 -> 새로운 선택지)
+        Dept = new JComboBox<>();
+
         ComboBoxPanel.add(Dept);
 
+        //입력 필드
+        textField = new JTextField(15);
+        ComboBoxPanel.add(textField);
 
+        Category.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String selectedCategory = (String) Category.getSelectedItem();
+                updateOptionComboBoxModel(selectedCategory);
+            }
+        });
         JPanel CheckBoxPanel = new JPanel();
         CheckBoxPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
         CheckBoxPanel.add(name);
@@ -135,10 +160,36 @@ public class Company extends JFrame implements ActionListener{
 
     }
 
+    private void updateOptionComboBoxModel(String selectedCategory){
+        DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
+
+        if(selectedCategory.equals("성별")){
+            for(String option : SexOption){
+                model.addElement(option);
+            }
+            textField.setVisible(false);
+        }else if(selectedCategory.equals("부서별")){
+            for(String option: DepartMentOption){
+                model.addElement(option);
+            }
+            textField.setVisible(false);
+        }else if(selectedCategory.equals("연봉")){
+            for(String option : SalaryOption){
+                model.addElement(option);
+                textField.setVisible(true);
+            }
+        } else{
+            textField.setVisible(true);
+        }
+        Dept.setModel(model);
+    }
+
 
     // Query문 작성
     public void actionPerformed(ActionEvent e){
 
     }
+
+
 
 }
