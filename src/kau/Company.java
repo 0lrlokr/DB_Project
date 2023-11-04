@@ -252,6 +252,7 @@ public class Company extends JFrame implements ActionListener{
     public void actionPerformed(ActionEvent e){
 
 
+
     }
 
 
