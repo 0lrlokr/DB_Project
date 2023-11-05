@@ -1,12 +1,15 @@
 package kau;
 
-import java.util.*;
-import java.sql.*;
+import javax.swing.*;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
+import java.sql.*;
+import java.text.SimpleDateFormat;
+import java.util.Vector;
 
 
 // UI 작성
@@ -59,13 +62,13 @@ public class Employee extends JFrame implements ActionListener{
 
     JPanel panel;
     JScrollPane ScPane;
-    private JLabel Emplabel = new JLabel("선택한 직원");
+    private JLabel Emplabel = new JLabel("선택한 직원 이름 : ");
     private JLabel ShowSelectedEmp = new JLabel();
-    private JLabel Setlabel = new JLabel();
+    private JLabel Setlabel = new JLabel(" 새로운 Salary ");
     private JTextField SetSalary = new JTextField(10);
     private JButton Update_Btn = new JButton("UPDATE");
     private JButton Delete_Btn = new JButton("선택한 데이터 삭제");
-    int count = 0 ;
+    int count = 0;
 
 
     //사용자 삽입 UI
@@ -126,12 +129,16 @@ public class Employee extends JFrame implements ActionListener{
 
         JPanel ShowSelectedPanel = new JPanel();
         ShowSelectedPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+
         Emplabel.setFont(new Font("Dialog", Font.BOLD, 16));
+        ShowSelectedPanel.add(ShowSelectedEmp);
+        dShow = "";
+        ShowSelectedPanel.add(Emplabel);
         ShowSelectedPanel.add(ShowSelectedEmp);
 
 
 
-        // Update Panel
+        // Update Panel -- 기능 구현 할 수 있을지 모르겠음 (일단 보류)
         JPanel UpdatePanel = new JPanel();
         UpdatePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
         UpdatePanel.add(Setlabel);
@@ -208,9 +215,8 @@ public class Employee extends JFrame implements ActionListener{
         Update_Btn.addActionListener(this);
         Insert_Btn.addActionListener(this);
 
-
+        setTitle("Database Project #1");
         setSize(1200, 800);
-        setTitle("Information Retrival System");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setVisible(true);
@@ -248,145 +254,165 @@ public class Employee extends JFrame implements ActionListener{
     // JDBC연결
     public void actionPerformed(ActionEvent e) {
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver"); // JDBC 도라이버 연결
-            String user = "root";
-            String pwd = "SQLkelly2237!";
+            Class.forName("com.mysql.cj.jdbc.Driver"); // JDBC 연결
+            String user = "root"; // username (root)
+            String pwd = "SQLkelly2237!"; // 내 SQL 비밀번호 입력
             String dbname = "company";
             String url = "jdbc:mysql://localhost:3306/" + dbname + "?serverTimezone=UTC";
 
             connection = DriverManager.getConnection(url, user, pwd);
-            System.out.println(" DB연결 완료 ( 검색 버튼 클릭 ) ");
-        } catch (ClassNotFoundException ex) {
-            System.err.println("드라이버를 로드할 수 없습니다.");
-            ex.printStackTrace();
-        } catch (SQLException ex) {
-            System.err.println("연결할 수 없습니다.");
-            ex.printStackTrace();
+            System.out.println(" DB연결 SUCCESS ! ");
+
+
+            /// ------
+        } catch (ClassNotFoundException err) {
+            System.err.println("err : ClassNotFoundException");
+            err.printStackTrace();
+        } catch (SQLException err) {
+            System.err.println("err : SQLException");
+            err.printStackTrace();
         }
 
+
+
+
 //        ------------------
-        if (count == 1) {
+
+        if(count == 1){
             me.remove(panel);
             revalidate();
         }
 
 
-        // 검색 기능 
+        // 검색 기능
         if (e.getSource() == Search_Btn) {
             if (name.isSelected() || ssn.isSelected() || bdate.isSelected() || address.isSelected() || sex.isSelected() || salary.isSelected() || supervisor.isSelected() || department.isSelected()) {
                 Head.clear();
                 Head.add("선택");
 
-                String queryMsg = "select";
+                String SqueryMsg = "select";
                 if (name.isSelected()) {
-                    queryMsg += " concat(e.fname,' ',e.minit,' ',e.lname, ' ') as Name";
+                    SqueryMsg += " concat(e.fname,' ',e.minit,' ',e.lname, ' ') as Name";
                     Head.add("NAME");
                 }
                 if (ssn.isSelected()) {
                     if (!name.isSelected())
-                        queryMsg += " e.ssn";
+                        SqueryMsg += " e.ssn";
                     else
-                        queryMsg += ", e.ssn";
+                        SqueryMsg += ", e.ssn";
                     Head.add("SSN");
                 }
                 if (bdate.isSelected()) {
                     if (!name.isSelected() && !ssn.isSelected())
-                        queryMsg += " e.bdate";
+                        SqueryMsg += " e.bdate";
                     else
-                        queryMsg += ", e.bdate";
+                        SqueryMsg += ", e.bdate";
                     Head.add("BDATE");
                 }
                 if (address.isSelected()) {
                     if (!name.isSelected() && !ssn.isSelected() && !bdate.isSelected())
-                        queryMsg += " e.address";
+                        SqueryMsg += " e.address";
                     else
-                        queryMsg += ", e.address";
+                        SqueryMsg += ", e.address";
                     Head.add("ADDRESS");
                 }
                 if (sex.isSelected()) {
                     if (!name.isSelected() && ssn.isSelected() && !bdate.isSelected() && !address.isSelected())
-                        queryMsg += " e.sex";
+                        SqueryMsg += " e.sex";
                     else
-                        queryMsg += ", e.sex";
+                        SqueryMsg += ", e.sex";
                     Head.add("SEX");
                 }
                 if (salary.isSelected()) {
                     if (!name.isSelected() && ssn.isSelected() && !bdate.isSelected() && !address.isSelected() && !sex.isSelected())
-                        queryMsg += " e.salary";
+                        SqueryMsg += " e.salary";
                     else
-                        queryMsg += ", e.salary";
+                        SqueryMsg += ", e.salary";
                     Head.add("SALARY");
                 }
                 if (supervisor.isSelected()) {
                     if (!name.isSelected() && ssn.isSelected() && !bdate.isSelected() && !address.isSelected() && !sex.isSelected() && !salary.isSelected())
-                        queryMsg += " concat(s.fname,' ', s.minit, ' ', s.lname, ' ') as Supervisor";
+                        SqueryMsg += " concat(s.fname,' ', s.minit, ' ', s.lname, ' ') as Supervisor";
                     else
-                        queryMsg += ", concat(s.fname,' ', s.minit, ' ', s.lname, ' ') as Supervisor";
+                        SqueryMsg += ", concat(s.fname,' ', s.minit, ' ', s.lname, ' ') as Supervisor";
                     Head.add("SUPERVISOR");
 
                 }
                 if (department.isSelected()) {
                     if (!name.isSelected() && ssn.isSelected() && !bdate.isSelected() && !address.isSelected() && !sex.isSelected() && !salary.isSelected() && !department.isSelected())
-                        queryMsg += " dname";
+                        SqueryMsg += " dname";
                     else
-                        queryMsg += ", dname";
+                        SqueryMsg += ", dname";
                     Head.add("DEPARTMENT");
                 }
 
-                queryMsg += " from employee e left outer join employee s on e.super_ssn=s.ssn, department where e.dno = dnumber";
+                SqueryMsg += " from employee e left outer join employee s on e.super_ssn=s.ssn, department where e.dno = dnumber";
 
 
                 // 토글버튼 Category 클릭 시,
                 if (Attribute.getSelectedItem().toString() == "성별") {
                     if (Dept.getSelectedItem().toString() == "F")
-                        queryMsg += " and e.sex = \"F\";";
+                        SqueryMsg += " and e.sex = \"F\";";
                     else if (Dept.getSelectedItem().toString() == "M")
-                        queryMsg += " and e.sex = \"M\";";
+                        SqueryMsg += " and e.sex = \"M\";";
                 }else if(Attribute.getSelectedItem().toString() == "부서"){
                     if (Dept.getSelectedItem().toString() == "Headquarters")
-                        queryMsg += " and dname = \"Headquarters\";";
+                        SqueryMsg += " and dname = \"Headquarters\";";
                     else if (Dept.getSelectedItem().toString() == "Research")
-                        queryMsg += " and dname = \"Research\";";
+                        SqueryMsg += " and dname = \"Research\";";
                     else if (Dept.getSelectedItem().toString() == "Administration")
-                        queryMsg += " and dname = \"Administration\";";
+                        SqueryMsg += " and dname = \"Administration\";";
                 }else if(Attribute.getSelectedItem().toString() == "연봉"){
                     String inputValue = textField.getText();
                     if(Dept.getSelectedItem().toString() == ">="){
-                        queryMsg += " and e.salary >= \""+inputValue+"\";";
+                        SqueryMsg += " and e.salary >= \""+inputValue+"\";";
                     }
                     else if (Dept.getSelectedItem().toString() == ">"){
-                        queryMsg += " and e.salary > \""+inputValue+"\";";
+                        SqueryMsg += " and e.salary > \""+inputValue+"\";";
                     }
                     else if(Dept.getSelectedItem().toString() == "="){
-                        queryMsg += " and e.salary = \""+inputValue+"\";";
+                        SqueryMsg += " and e.salary = \""+inputValue+"\";";
                     }
                     else if(Dept.getSelectedItem().toString() == "<"){
-                        queryMsg += " and e.salary < \""+inputValue+"\";";
+                        SqueryMsg += " and e.salary < \""+inputValue+"\";";
                     }
                     else if(Dept.getSelectedItem().toString() == "<="){
-                        queryMsg += " and e.salary <= \""+inputValue+"\";";
+                        SqueryMsg += " and e.salary <= \""+inputValue+"\";";
                     }
                 }
                 // 검색어 -> 일부만 검색해도, 포함되는 row가 출력될 수 있도록
                 else if(Attribute.getSelectedItem().toString() == "이름"){
                     String inputValue = textField.getText();
-                    queryMsg += " and concat(e.fname,' ',e.minit,' ',e.lname) LIKE '%" + inputValue +"%'";
+                    if(inputValue.isEmpty()){
+                        JOptionPane.showConfirmDialog(null, "검색할 이름을 입력해주세요.");
+                    }else {
+                        SqueryMsg += " and concat(e.fname,' ',e.minit,' ',e.lname) LIKE '%" + inputValue + "%'";
+                    }
                 }
                 else if(Attribute.getSelectedItem().toString() == "주민번호"){
                     String inputValue = textField.getText();
-                    queryMsg += " and e.ssn LIKE '%" + inputValue +"%'";
+                    System.out.println("inputValue : "+ inputValue);
+                    if(inputValue == ""){
+                        JOptionPane.showConfirmDialog(null, "검색할 주민번호를 입력해주세요.");
+                    }else{
+                        SqueryMsg += " and e.ssn LIKE '%" + inputValue +"%'";
+                    }
                 }
                 else if(Attribute.getSelectedItem().toString() == "생일"){
                     String inputValue = textField.getText();
-                    queryMsg += " and e.bdate LIKE '%" + inputValue +"%'";
+                    if(inputValue.isEmpty()){
+                        JOptionPane.showConfirmDialog(null, "검색할 생년월알을 입력해주세요.");
+                    }else{
+                        SqueryMsg += " and e.bdate LIKE '%" + inputValue +"%'";
+                    }
                 }
                 else if(Attribute.getSelectedItem().toString() == "주소"){
                     String inputValue = textField.getText();
-                    queryMsg += " and e.address LIKE '%" + inputValue +"%'";
+                    SqueryMsg += " and e.address LIKE '%" + inputValue +"%'";
                 }
                 else if(Attribute.getSelectedItem().toString() == "상사 이름"){
                     String inputValue = textField.getText();
-                    queryMsg += " and concat(s.fname,' ',s.minit,' ',s.lname) LIKE '%" + inputValue +"%'";
+                    SqueryMsg += " and concat(s.fname,' ',s.minit,' ',s.lname) LIKE '%" + inputValue +"%'";
                 }
 
 
@@ -425,12 +451,10 @@ public class Employee extends JFrame implements ActionListener{
 
 
                 try {
-                    count = 1;
                     state = connection.createStatement();
-                    result = state.executeQuery(queryMsg);
+                    result = state.executeQuery(SqueryMsg);
                     ResultSetMetaData resultSetMetaData = result.getMetaData();
                     int columnCnt = resultSetMetaData.getColumnCount();
-                    int rowCnt = table.getRowCount();
 
                     while (result.next()) {
                         Vector<Object> tuple = new Vector<Object>();
@@ -439,40 +463,174 @@ public class Employee extends JFrame implements ActionListener{
                             tuple.add(result.getString(resultSetMetaData.getColumnName(i)));
                         }
                         model.addRow(tuple);
-                        rowCnt++;
                     }
-                    totalCount.setText(String.valueOf(rowCnt));
 
-                } catch (SQLException ee) {
-                    System.out.println("actionPerformed err : " + ee);
-                    ee.printStackTrace();
+                } catch (SQLException err) {
+                    System.out.println("SQLException 에러 : " + err);
+                    err.printStackTrace();
                 }
+                // 검색한 결과 띄워주는 창
+                System.out.println("");
                 panel = new JPanel();
                 ScPane = new JScrollPane(table);
-                //table.getModel().addTableModelListener(new CheckBoxModelListner());
+                table.getModel().addTableModelListener(new ChkBoxListener());
                 ScPane.setPreferredSize(new Dimension(1100, 400));
                 panel.add(ScPane);
                 add(panel, BorderLayout.CENTER);
                 revalidate();
 
+
             } else {
-                JOptionPane.showConfirmDialog(null, "검색 항목을 한 개 이상 검색하세요.");
+                JOptionPane.showConfirmDialog(null, "검색할 항목을 입력해주세요. ");
             }
 
+        }// --------------------- 검색 끝 ---------------------
+
+
+
+        // --------------------- 삽입 ---------------------
+        if (e.getSource() == Insert_Btn) {
+            System.out.println("삽입 버튼 클릭");
+            String insert_name = InsertName.getText(),
+                    insert_ssn = InsertSsn.getText(),
+                    insert_bdate = InsertBdate.getText(),
+                    insert_address = InsertAddress.getText() ,
+                    insert_sex = InsertSex.getText().equals("female") ? "F" : "M",
+                    insert_salary = InsertSalary.getText(),
+                    insert_superssn = InsertSuper.getText(),
+                    insert_department = InsertDepartment.getText();
+            String[] name = insert_name.split(" ");
+
+
+
+            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+            SimpleDateFormat sdf = new SimpleDateFormat ("yyyy-MM-dd hh:mm:ss");
+
+
+            String InsertQueryMsg = "Insert into employee values (?,?,?,?,?,?,?,?,?,?,?,?)";
+            try {
+                PreparedStatement insertP = connection.prepareStatement(InsertQueryMsg);
+                insertP.clearParameters();
+                insertP.setString(1, name[0]);
+                insertP.setString(2, name[1]);
+                insertP.setString(3, name[2]);
+                insertP.setString(4, insert_ssn);
+                insertP.setString(5, insert_bdate);
+                insertP.setString(6, insert_address);
+                insertP.setString(7, insert_sex);
+                insertP.setString(8, insert_salary);
+                insertP.setString(9, insert_superssn);
+                insertP.setString(10, insert_department);
+                insertP.setString(11, sdf.format(timestamp));
+                insertP.setString(12, sdf.format(timestamp));
+                insertP.executeUpdate();
+                insertP.close();
+            } catch (SQLException err) {
+                err.printStackTrace();
+            }catch (ArrayIndexOutOfBoundsException err){
+                err.printStackTrace();
+                System.err.println("입력");
+                JOptionPane.showConfirmDialog(null, "검색할 항목을 입력해주세요. ");
+
+            }
+        }
+
+        //-------삽입 끝
+
+        // ------- 삭제 시작---------
+        if(e.getSource() ==Delete_Btn){
+            System.out.println("삭제 버튼 클릭");
+            Vector<String> Delete_Ssn = new Vector<String>();
+            try{
+
+                // Prime Key를 통해서 삭제
+                String colName = model.getColumnName(2);
+                if(colName == "SSN"){
+                    for(int i = 0; i< table.getRowCount(); i++){
+                        if(table.getValueAt(i,0) == Boolean.TRUE){
+                            Delete_Ssn.add((String) table.getValueAt(i,2));
+
+                        }
+                    }
+                    for(int i = 0; i< Delete_Ssn.size() ; i++){
+                        for(int j = 0; j<model.getRowCount();j++){
+                            if(table.getValueAt(j,0) == Boolean.TRUE){
+                                // 행 지우기
+                                model.removeRow(j);
+                                totalCount.setText(String.valueOf(table.getRowCount()));
+                            }
+                        }
+                    }
+                    for(int k = 0; k<Delete_Ssn.size(); k++){
+                        String DeleteQueryMsg = "DELETE FROM EMPLOYEE WHERE Ssn =?";
+                        PreparedStatement DelP = connection.prepareStatement(DeleteQueryMsg);
+                        DelP.clearParameters();
+                        DelP.setString(1,String.valueOf(Delete_Ssn.get(k)));
+                        DelP.executeUpdate();
+                    }
+                }else{
+                    JOptionPane.showMessageDialog(null, "삭제 작업을 위해 주민번호(SSN)항목을 체크해주세요");
+                }
+                ShowSelectedEmp.setText(" ");
+            } catch (SQLException err) {
+                System.out.println("SQLException err : "+ err);
+                throw new RuntimeException(err);
+            }
+
+            // 삭제 후 결과 띄워주는 창
+            System.out.println("삭제 완료 -- 결과 ");
+            panel = new JPanel();
+            ScPane = new JScrollPane(table);
+            table.getModel().addTableModelListener(new ChkBoxListener());
+            ScPane.setPreferredSize(new Dimension(1100,400));
+            panel.add(ScPane);
+            add(panel, BorderLayout.CENTER);
+            revalidate();
+        }
+        // -------- 삭제 끝 ---------
+
+    }
+
+
+   // CheckBox 이벤트 리스너 정의
+    public class ChkBoxListener implements TableModelListener{
+        @Override
+        public void tableChanged(TableModelEvent e) {
+            System.out.println("CheckBox Click Listener");
+//            int col = e.getColumn();
+//            int row = e.getFirstRow();
+//            if(col == BOOLEAN_COLUMN){
+//                TableModel Tmodel = (TableModel) e.getSource();
+//                String colName = model.getColumnName(1);
+//                Boolean checked = (Boolean) Tmodel.getValueAt(row,col);
+//                if(colName == "NAME"){
+//                    if(checked){
+//                        dShow = "";
+//                        for(int i = 0; i < table.getRowCount(); i++){
+//                            if(table.getValueAt(i,0) == Boolean.TRUE){
+//                                dShow += (String) table.getValueAt(i,NAME_COLUMN) + "  ";
+//                            }
+//                        }
+//                        ShowSelectedEmp.setText(dShow);
+//                    }else{
+//                        dShow = "";
+//                        for (int i = 0; i< table.getRowCount(); i++){
+//                            if(table.getValueAt(i,0) == Boolean.TRUE){
+//                                dShow+=(String) table.getValueAt(i,1) + " ";
+//                            }
+//                        }
+//                        ShowSelectedEmp.setText(dShow);
+//                    }
+//                }
+//            }
         }
     }
-    // ---------- 검색 끝 ---------
 
 
-
-
-    // ---------- 삭제 시작 ---------------
-    // ---------- 삭제 끝 ---------------
 
 
     // ---------- 업데이트 시작 -------------
     // ---------- 업데이트 끝 --------------
-
 
     public static void main(String[] args){
         new Employee();
