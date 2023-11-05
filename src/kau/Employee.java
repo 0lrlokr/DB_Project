@@ -154,11 +154,11 @@ public class Employee extends JFrame implements ActionListener{
         //  Insert Panel
         JPanel InsertPanel = new JPanel();
         InsertPanel.setLayout(new GridLayout(9,2));
-        InsertPanel.add(new JLabel("이름"));
+        InsertPanel.add(new JLabel("이름 (firstname middlename lastname 형식으로 입력해주세요)"));
         InsertPanel.add(InsertName);
         InsertPanel.add(new JLabel("주민번호"));
         InsertPanel.add(InsertSsn);
-        InsertPanel.add(new JLabel("생일"));
+        InsertPanel.add(new JLabel("생일 (yyyy-mm-dd 형식으로 입력해주세요) "));
         InsertPanel.add(InsertBdate);
         InsertPanel.add(new JLabel("주소"));
         InsertPanel.add(InsertAddress);
@@ -168,7 +168,7 @@ public class Employee extends JFrame implements ActionListener{
         InsertPanel.add(InsertSalary);
         InsertPanel.add(new JLabel("상사"));
         InsertPanel.add(InsertSuper);
-        InsertPanel.add(new JLabel("부서"));
+        InsertPanel.add(new JLabel("부서 (부서 id로 입력해주세요 1: Research, 2: .. "));
         InsertPanel.add(InsertDepartment);
         InsertPanel.add(new JLabel("입력"));
         InsertPanel.add(Insert_Btn);
