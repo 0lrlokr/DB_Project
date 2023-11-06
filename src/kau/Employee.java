@@ -4,6 +4,7 @@ import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -47,11 +48,11 @@ public class Employee extends JFrame implements ActionListener{
 
     private JTable table;
     private DefaultTableModel model;
-    private static final int BOOLEAN_COLUMN = 0;
-    private int NAME_COLUMN = 0;
+    private static final int selectColumn = 0;
+    private int columnOfName = 0;
     private int SALARY_COLUMN = 0;
 
-    private String dShow ;
+    private String showNameList ;
 
     private JButton Search_Btn = new JButton("검색");
     Container me = this;
@@ -132,7 +133,7 @@ public class Employee extends JFrame implements ActionListener{
 
         Emplabel.setFont(new Font("Dialog", Font.BOLD, 16));
         ShowSelectedPanel.add(ShowSelectedEmp);
-        dShow = "";
+        showNameList = "";
         ShowSelectedPanel.add(Emplabel);
         ShowSelectedPanel.add(ShowSelectedEmp);
 
@@ -162,13 +163,13 @@ public class Employee extends JFrame implements ActionListener{
         InsertPanel.add(InsertBdate);
         InsertPanel.add(new JLabel("주소"));
         InsertPanel.add(InsertAddress);
-        InsertPanel.add(new JLabel("성별"));
+        InsertPanel.add(new JLabel("성별 ( Male : M, Female:F) "));
         InsertPanel.add(InsertSex);
         InsertPanel.add(new JLabel("연봉"));
         InsertPanel.add(InsertSalary);
         InsertPanel.add(new JLabel("상사"));
         InsertPanel.add(InsertSuper);
-        InsertPanel.add(new JLabel("부서 (부서 id로 입력해주세요 1: Research, 2: .. "));
+        InsertPanel.add(new JLabel("부서 (부서 id로 입력해주세요 1: Headquarters, 4: Administration, 5: Research)"));
         InsertPanel.add(InsertDepartment);
         InsertPanel.add(new JLabel("입력"));
         InsertPanel.add(Insert_Btn);
@@ -272,7 +273,7 @@ public class Employee extends JFrame implements ActionListener{
             System.err.println("err : SQLException");
             err.printStackTrace();
         }
-
+        System.out.println("attribute : " + Attribute.getSelectedIndex());
 
 
 
@@ -345,6 +346,7 @@ public class Employee extends JFrame implements ActionListener{
                         SqueryMsg += ", dname";
                     Head.add("DEPARTMENT");
                 }
+
 
                 SqueryMsg += " from employee e left outer join employee s on e.super_ssn=s.ssn, department where e.dno = dnumber";
 
@@ -420,8 +422,8 @@ public class Employee extends JFrame implements ActionListener{
 
                 model = new DefaultTableModel(Head, 0) {
                     @Override
-                    public boolean isCellEditable(int row, int column) {
-                        if (column > 0) {
+                    public boolean isCellEditable(int row, int col) {
+                        if (col > 0) {
                             return false;
                         } else {
                             return true;
@@ -431,7 +433,7 @@ public class Employee extends JFrame implements ActionListener{
 
                 for (int i = 0; i < Head.size(); i++) {
                     if (Head.get(i) == "NAME") {
-                        NAME_COLUMN = i;
+                        columnOfName = i;
                     } else if (Head.get(i) == "SALARY") {
                         SALARY_COLUMN = i;
                     }
@@ -451,6 +453,7 @@ public class Employee extends JFrame implements ActionListener{
 
 
                 try {
+                    count = 1;
                     state = connection.createStatement();
                     result = state.executeQuery(SqueryMsg);
                     ResultSetMetaData resultSetMetaData = result.getMetaData();
@@ -479,10 +482,13 @@ public class Employee extends JFrame implements ActionListener{
                 add(panel, BorderLayout.CENTER);
                 revalidate();
 
+                System.out.println("검색쿼리 : " + SqueryMsg);
 
             } else {
                 JOptionPane.showConfirmDialog(null, "검색할 항목을 입력해주세요. ");
             }
+
+
 
         }// --------------------- 검색 끝 ---------------------
 
@@ -597,32 +603,31 @@ public class Employee extends JFrame implements ActionListener{
         @Override
         public void tableChanged(TableModelEvent e) {
             System.out.println("CheckBox Click Listener");
-//            int col = e.getColumn();
-//            int row = e.getFirstRow();
-//            if(col == BOOLEAN_COLUMN){
-//                TableModel Tmodel = (TableModel) e.getSource();
-//                String colName = model.getColumnName(1);
-//                Boolean checked = (Boolean) Tmodel.getValueAt(row,col);
-//                if(colName == "NAME"){
-//                    if(checked){
-//                        dShow = "";
-//                        for(int i = 0; i < table.getRowCount(); i++){
-//                            if(table.getValueAt(i,0) == Boolean.TRUE){
-//                                dShow += (String) table.getValueAt(i,NAME_COLUMN) + "  ";
-//                            }
-//                        }
-//                        ShowSelectedEmp.setText(dShow);
-//                    }else{
-//                        dShow = "";
-//                        for (int i = 0; i< table.getRowCount(); i++){
-//                            if(table.getValueAt(i,0) == Boolean.TRUE){
-//                                dShow+=(String) table.getValueAt(i,1) + " ";
-//                            }
-//                        }
-//                        ShowSelectedEmp.setText(dShow);
-//                    }
-//                }
-//            }
+            int col = e.getColumn();
+            int row = e.getFirstRow();
+            if(col == selectColumn){
+                TableModel Tmodel = (TableModel) e.getSource();
+                String colName = model.getColumnName(1);
+                Boolean checked = (Boolean) Tmodel.getValueAt(row,col);
+                if(colName == "NAME"){
+                    showNameList = "";
+                    if(checked){
+                        showNameList = "";
+                        for(int i = 0; i < table.getRowCount(); i++){
+                            if(table.getValueAt(i,0) == Boolean.TRUE){
+                                showNameList += (String) table.getValueAt(i,columnOfName) + "  ";
+                            }
+                        }
+                    }else{
+                        for (int i = 0; i< table.getRowCount(); i++){
+                            if(table.getValueAt(i,0) == Boolean.TRUE){
+                                showNameList+=(String) table.getValueAt(i,1) + " ";
+                            }
+                        }
+                        ShowSelectedEmp.setText(showNameList);
+                    }
+                }
+            }
         }
     }
 
